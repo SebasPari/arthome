@@ -14,6 +14,12 @@ _railway_host = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
 if _railway_host and _railway_host not in ALLOWED_HOSTS:
     ALLOWED_HOSTS.append(_railway_host)
 
+CSRF_TRUSTED_ORIGINS = [h.strip() for h in config('CSRF_TRUSTED_ORIGINS', default='http://127.0.0.1,http://localhost').split(',')]
+if _railway_host:
+    _railway_origin = f'https://{_railway_host}'
+    if _railway_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(_railway_origin)
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
