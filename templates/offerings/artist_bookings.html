@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Demandes reçues — ArtHome{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-wrapper { min-height:100vh; background:var(--cream); padding-top:5rem; }
+
+  .page-header { background:var(--ink); padding:3.5rem 3rem 2.5rem; position:relative; overflow:hidden; }
+  .page-header::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse 60% 80% at 90% 50%, rgba(200,169,110,0.10) 0%, transparent 60%); pointer-events:none; }
+  .page-header-inner { position:relative; z-index:1; max-width:900px; margin:0 auto; display:flex; align-items:flex-end; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+  .page-tag { font-size:0.7rem; font-weight:500; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent); margin-bottom:0.5rem; }
+  .page-title { font-family:'Cormorant Garamond',serif; font-size:clamp(1.8rem,4vw,2.8rem); font-weight:300; color:var(--cream); }
+
+  .header-stats { display:flex; gap:1.5rem; }
+  .stat { text-align:center; }
+  .stat-num { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; color:var(--accent); line-height:1; }
+  .stat-label { font-size:0.65rem; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:rgba(247,244,239,0.4); margin-top:0.2rem; }
+
+  .content { max-width:900px; margin:0 auto; padding:3rem; }
+
+  .section-title {
+    font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:300;
+    color:var(--ink); margin:2rem 0 1.25rem;
+    display:flex; align-items:center; gap:1rem;
+  }
+  .section-title:first-child { margin-top:0; }
+  .section-title::after { content:''; flex:1; height:1px; background:var(--border); }
+  .section-count { font-family:'DM Sans',sans-serif; font-size:0.72rem; color:var(--ink-muted); }
+
+  .booking-list { display:flex; flex-direction:column; gap:1rem; margin-bottom:2.5rem; }
+
+  .booking-card {
+    background:var(--white); border:1px solid var(--border); border-radius:4px; padding:1.5rem;
+  }
+
+  .booking-card-header { display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:0.75rem; flex-wrap:wrap; }
+
+  .booking-host { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:400; color:var(--ink); }
+  .booking-offering-name { font-size:0.78rem; color:var(--ink-muted); font-weight:300; margin-top:0.2rem; }
+
+  .status-badge {
+    display:inline-block; padding:0.3rem 0.75rem; border-radius:99px;
+    font-size:0.68rem; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; white-space:nowrap;
+  }
+  .status-pending   { background:#fff8e6; color:#b7860a; border:1px solid #f0d080; }
+  .status-confirmed { background:#e8f5e9; color:#2e7d32; border:1px solid #a5d6a7; }
+  .status-declined  { background:#fce4e4; color:#c62828; border:1px solid #ef9a9a; }
+  .status-cancelled { background:var(--cream); color:var(--ink-muted); border:1px solid var(--border); }
+
+  .booking-meta { display:flex; gap:1.25rem; flex-wrap:wrap; font-size:0.75rem; color:var(--ink-muted); margin-bottom:0.75rem; }
+
+  .booking-message {
+    padding:0.75rem; background:var(--cream); border-radius:3px;
+    font-size:0.82rem; color:var(--ink); font-weight:300; line-height:1.6;
+  }
+
+  .booking-address {
+    margin-top:0.5rem; font-size:0.78rem; color:var(--ink-muted); font-weight:300;
+  }
+
+  .booking-actions { display:flex; gap:0.75rem; margin-top:1rem; flex-wrap:wrap; align-items:center; }
+
+  .btn-confirm {
+    padding:0.55rem 1.25rem; background:var(--ink); color:var(--cream); border:none;
+    border-radius:3px; font-family:'DM Sans',sans-serif; font-size:0.75rem; font-weight:500;
+    letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; transition:background 0.2s;
+  }
+  .btn-confirm:hover { background:#2e2a27; }
+
+  .btn-decline {
+    padding:0.55rem 1.25rem; background:none; color:#c62828;
+    border:1px solid #ef9a9a; border-radius:3px; font-family:'DM Sans',sans-serif;
+    font-size:0.75rem; font-weight:500; letter-spacing:0.08em; text-transform:uppercase;
+    cursor:pointer; transition:border-color 0.2s;
+  }
+  .btn-decline:hover { border-color:#c62828; }
+
+  .btn-respond-link {
+    font-size:0.75rem; color:var(--ink-muted); text-decoration:underline;
+    text-underline-offset:2px; text-decoration-color:var(--border);
+  }
+  .btn-respond-link:hover { color:var(--ink); }
+
+  .empty-state { text-align:center; padding:4rem 2rem; color:var(--ink-muted); }
+  .empty-icon { font-size:2.5rem; display:block; margin-bottom:1rem; }
+  .empty-title { font-family:'Cormorant Garamond',serif; font-size:1.6rem; font-weight:300; color:var(--ink); margin-bottom:0.5rem; }
+  .empty-sub { font-size:0.85rem; font-weight:300; }
+
+  @media (max-width:700px) { .page-header { padding:3rem 1.5rem 2rem; } .page-header-inner { flex-direction:column; align-items:flex-start; } .content { padding:1.5rem; } }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+
+  <nav class="navbar scrolled">
+    <a href="{% url 'core:home' %}" class="nav-logo" style="color:var(--accent)">Art<span style="opacity:0.5">/</span>Home</a>
+    <ul class="nav-links">
+      <li><a href="{% url 'accounts:artist_detail' pk=request.user.artist_profile.pk %}" style="color:var(--ink-muted)">Mon profil</a></li>
+      <li><a href="{% url 'offerings:artist_bookings' %}" style="color:var(--ink)">Demandes reçues</a></li>
+      <li><a href="{% url 'accounts:logout' %}" style="color:var(--ink-muted)">Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div>
+        <p class="page-tag">Tableau de bord artiste</p>
+        <h1 class="page-title">Demandes reçues</h1>
+      </div>
+      <div class="header-stats">
+        <div class="stat">
+          <p class="stat-num">{{ pending.count }}</p>
+          <p class="stat-label">En attente</p>
+        </div>
+        <div class="stat">
+          <p class="stat-num">{{ confirmed.count }}</p>
+          <p class="stat-label">Confirmées</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    {% if not pending and not confirmed and not past %}
+      <div class="empty-state">
+        <span class="empty-icon">◎</span>
+        <h2 class="empty-title">Aucune demande pour l'instant.</h2>
+        <p class="empty-sub">Les hôtes vous contacteront ici dès qu'ils souhaiteront vous inviter.</p>
+      </div>
+
+    {% else %}
+
+      {% if pending %}
+      <h2 class="section-title">En attente <span class="section-count">({{ pending.count }})</span></h2>
+      <div class="booking-list">
+        {% for b in pending %}
+        <div class="booking-card">
+          <div class="booking-card-header">
+            <div>
+              <p class="booking-host">{{ b.host.full_name }}</p>
+              <p class="booking-offering-name">pour « {{ b.offering.title }} »</p>
+            </div>
+            <span class="status-badge status-{{ b.status }}">{{ b.get_status_display }}</span>
+          </div>
+          <div class="booking-meta">
+            {% if b.date_wish %}<span>📅 {{ b.date_wish|date:"j M Y" }}</span>{% endif %}
+            <span>👥 {{ b.guests }} participant{{ b.guests|pluralize }}</span>
+            <span>📨 Reçue le {{ b.created_at|date:"j M Y" }}</span>
+          </div>
+          {% if b.message %}<div class="booking-message">{{ b.message }}</div>{% endif %}
+          {% if b.address %}<p class="booking-address">📍 {{ b.address }}</p>{% endif %}
+          <div class="booking-actions">
+            <form method="post" action="{% url 'offerings:booking_respond' b.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="confirm"/>
+              <input type="hidden" name="artist_note" value=""/>
+              <button class="btn-confirm" type="submit">✓ Confirmer</button>
+            </form>
+            <form method="post" action="{% url 'offerings:booking_respond' b.pk %}">
+              {% csrf_token %}
+              <input type="hidden" name="action" value="decline"/>
+              <input type="hidden" name="artist_note" value=""/>
+              <button class="btn-decline" type="submit">✕ Refuser</button>
+            </form>
+            <a href="{% url 'offerings:booking_respond' b.pk %}" class="btn-respond-link">
+              Répondre avec un message →
+            </a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if confirmed %}
+      <h2 class="section-title">Confirmées <span class="section-count">({{ confirmed.count }})</span></h2>
+      <div class="booking-list">
+        {% for b in confirmed %}
+        <div class="booking-card">
+          <div class="booking-card-header">
+            <div>
+              <p class="booking-host">{{ b.host.full_name }}</p>
+              <p class="booking-offering-name">pour « {{ b.offering.title }} »</p>
+            </div>
+            <span class="status-badge status-{{ b.status }}">{{ b.get_status_display }}</span>
+          </div>
+          <div class="booking-meta">
+            {% if b.date_wish %}<span>📅 {{ b.date_wish|date:"j M Y" }}</span>{% endif %}
+            <span>👥 {{ b.guests }} participant{{ b.guests|pluralize }}</span>
+            {% if b.address %}<span>📍 {{ b.address }}</span>{% endif %}
+          </div>
+          {% if b.artist_note %}
+          <div class="booking-message" style="background:var(--accent-light);border-left:3px solid var(--accent);">
+            Votre réponse : {{ b.artist_note }}
+          </div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if past %}
+      <h2 class="section-title">Archivées <span class="section-count">({{ past.count }})</span></h2>
+      <div class="booking-list">
+        {% for b in past %}
+        <div class="booking-card" style="opacity:0.65;">
+          <div class="booking-card-header">
+            <div>
+              <p class="booking-host">{{ b.host.full_name }}</p>
+              <p class="booking-offering-name">pour « {{ b.offering.title }} »</p>
+            </div>
+            <span class="status-badge status-{{ b.status }}">{{ b.get_status_display }}</span>
+          </div>
+          <div class="booking-meta">
+            {% if b.date_wish %}<span>📅 {{ b.date_wish|date:"j M Y" }}</span>{% endif %}
+            <span>👥 {{ b.guests }} participant{{ b.guests|pluralize }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,725 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Trouver un artiste — ArtHome{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-wrapper {
+    min-height: 100vh;
+    background: var(--cream);
+    padding-top: 5rem;
+  }
+
+  /* ── PAGE HEADER ── */
+  .page-header {
+    background: var(--ink);
+    padding: 4rem 3rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .page-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 80% at 80% 50%, rgba(200,169,110,0.12) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .page-header-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .page-tag {
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 300;
+    color: var(--cream);
+    line-height: 1.1;
+    margin-bottom: 0;
+  }
+
+  /* ── SEARCH BAR ── */
+  .search-form {
+    display: flex;
+    gap: 0.6rem;
+    min-width: 320px;
+    flex: 1;
+    max-width: 480px;
+  }
+
+  .search-input {
+    flex: 1;
+    padding: 0.75rem 1rem;
+    border: 1.5px solid rgba(247,244,239,0.18);
+    border-radius: 3px;
+    background: rgba(247,244,239,0.07);
+    color: var(--cream);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 300;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .search-input::placeholder { color: rgba(247,244,239,0.3); }
+  .search-input:focus { border-color: var(--accent); }
+
+  .search-btn {
+    padding: 0.75rem 1.25rem;
+    background: var(--accent);
+    color: var(--ink);
+    border: none;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .search-btn:hover { background: #d4b87a; }
+
+  /* ── BODY LAYOUT ── */
+  .body-layout {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2.5rem 3rem;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 2.5rem;
+    align-items: start;
+  }
+
+  /* ── SIDEBAR FILTERS ── */
+  .filters-sidebar {
+    position: sticky;
+    top: 6rem;
+  }
+
+  .filter-form { display: flex; flex-direction: column; gap: 1.5rem; }
+
+  .filter-group {}
+
+  .filter-group-title {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .filter-group-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .filter-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .filter-option {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.45rem 0.6rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: background 0.15s;
+    text-decoration: none;
+  }
+
+  .filter-option:hover { background: rgba(26,23,20,0.05); }
+
+  .filter-option.active {
+    background: var(--ink);
+  }
+
+  .filter-option-label {
+    font-size: 0.82rem;
+    color: var(--ink);
+    font-weight: 300;
+    flex: 1;
+  }
+
+  .filter-option.active .filter-option-label { color: var(--cream); }
+
+  .filter-option-count {
+    font-size: 0.7rem;
+    color: var(--ink-muted);
+    background: var(--cream);
+    border-radius: 99px;
+    padding: 0.1rem 0.45rem;
+    min-width: 1.5rem;
+    text-align: center;
+    font-weight: 400;
+  }
+
+  .filter-option.active .filter-option-count {
+    background: rgba(247,244,239,0.15);
+    color: rgba(247,244,239,0.7);
+  }
+
+  /* Location select */
+  .filter-select-wrap { position: relative; }
+
+  .filter-select {
+    width: 100%;
+    padding: 0.6rem 2rem 0.6rem 0.75rem;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 300;
+    color: var(--ink);
+    background: var(--white);
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .filter-select:focus { border-color: var(--ink); }
+
+  .filter-select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--ink-muted);
+    font-size: 0.75rem;
+  }
+
+  /* Sort select */
+  .sort-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .results-meta {
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    font-weight: 300;
+  }
+
+  .results-meta strong { color: var(--ink); font-weight: 500; }
+
+  .sort-wrap {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .sort-label {
+    font-size: 0.72rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+
+  .sort-select {
+    padding: 0.4rem 2rem 0.4rem 0.6rem;
+    border: 1.5px solid var(--border);
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 300;
+    color: var(--ink);
+    background: var(--white);
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+  }
+
+  .sort-select-wrap { position: relative; }
+
+  .sort-select-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--ink-muted);
+    font-size: 0.7rem;
+  }
+
+  /* Active filter tags */
+  .active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.7rem;
+    background: var(--ink);
+    color: var(--cream);
+    border-radius: 99px;
+    font-size: 0.72rem;
+    font-weight: 400;
+    text-decoration: none;
+  }
+
+  .filter-tag .remove {
+    opacity: 0.6;
+    font-size: 0.8rem;
+    transition: opacity 0.15s;
+  }
+
+  .filter-tag:hover .remove { opacity: 1; }
+
+  .clear-all {
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--border);
+    align-self: center;
+  }
+
+  .clear-all:hover { color: var(--ink); }
+
+  /* ── ARTIST GRID ── */
+  .artist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .artist-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    text-decoration: none;
+    color: inherit;
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .artist-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(26,23,20,0.08);
+  }
+
+  .card-avatar-placeholder,
+  .card-avatar {
+    width: 100%;
+    aspect-ratio: 4/3;
+    object-fit: cover;
+    display: block;
+  }
+
+  .card-avatar-placeholder {
+    background: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3.5rem;
+    font-weight: 300;
+    color: var(--accent);
+  }
+
+  .card-body {
+    padding: 1.1rem 1.25rem 1.25rem;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card-discipline {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+
+  .card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.35rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+    line-height: 1.2;
+  }
+
+  .card-bio {
+    font-size: 0.8rem;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    font-weight: 300;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex: 1;
+  }
+
+  .card-meta {
+    margin-top: 0.9rem;
+    padding-top: 0.9rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+  }
+
+  .card-offerings-count { font-weight: 500; color: var(--ink); }
+
+  /* Offering category badges on card */
+  .card-categories {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    margin-top: 0.6rem;
+  }
+
+  .cat-badge {
+    font-size: 0.62rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.2rem 0.5rem;
+    border-radius: 99px;
+    border: 1px solid var(--border);
+    color: var(--ink-muted);
+    background: var(--cream);
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 5rem 2rem;
+  }
+
+  .empty-icon { font-size: 3rem; margin-bottom: 1rem; display: block; }
+
+  .empty-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem;
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-sub {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    font-weight: 300;
+    margin-bottom: 1.5rem;
+  }
+
+  /* ── MOBILE ── */
+  @media (max-width: 900px) {
+    .body-layout { grid-template-columns: 1fr; }
+    .filters-sidebar { position: static; }
+    .filter-form { flex-direction: row; flex-wrap: wrap; gap: 1rem; }
+    .filter-group { min-width: 150px; flex: 1; }
+  }
+
+  @media (max-width: 700px) {
+    .page-header { padding: 3rem 1.5rem 2rem; }
+    .page-header-inner { flex-direction: column; align-items: flex-start; }
+    .search-form { min-width: 0; max-width: 100%; width: 100%; }
+    .body-layout { padding: 1.5rem; }
+    .artist-grid { grid-template-columns: 1fr 1fr; gap: 1rem; }
+  }
+
+  @media (max-width: 480px) {
+    .artist-grid { grid-template-columns: 1fr; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+
+  <!-- NAVBAR -->
+  <nav class="navbar scrolled" id="navbar">
+    <a href="{% url 'core:home' %}" class="nav-logo" style="color:var(--accent)">Art<span style="opacity:0.5">/</span>Home</a>
+    <ul class="nav-links">
+      <li><a href="{% url 'accounts:artist_list' %}" style="color:var(--ink)">Trouver un artiste</a></li>
+      {% if user.is_authenticated %}
+        {% if user.is_artist %}
+          <li><a href="{% url 'accounts:artist_detail' pk=user.artist_profile.pk %}" style="color:var(--ink-muted)">Mon profil</a></li>
+        {% endif %}
+        <li><a href="{% url 'accounts:logout' %}" style="color:var(--ink-muted)">Déconnexion</a></li>
+      {% else %}
+        <li><a href="{% url 'accounts:join' %}" class="nav-cta" style="border-color:var(--ink);color:var(--ink)!important">Rejoindre</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- PAGE HEADER -->
+  <div class="page-header">
+    <div class="page-header-inner">
+      <div>
+        <p class="page-tag">Découvrir</p>
+        <h1 class="page-title">Trouver un artiste</h1>
+      </div>
+      <form class="search-form" method="get" id="search-form">
+        {% if discipline %}<input type="hidden" name="discipline" value="{{ discipline }}"/>{% endif %}
+        {% if category %}<input type="hidden" name="category" value="{{ category }}"/>{% endif %}
+        {% if location %}<input type="hidden" name="location" value="{{ location }}"/>{% endif %}
+        {% if sort %}<input type="hidden" name="sort" value="{{ sort }}"/>{% endif %}
+        <input class="search-input" type="text" name="q" value="{{ query }}"
+               placeholder="Nom, discipline, mot-clé…" autocomplete="off"/>
+        <button class="search-btn" type="submit">Chercher</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body-layout">
+
+    <!-- ── SIDEBAR FILTERS ── -->
+    <aside class="filters-sidebar">
+      <div class="filter-form">
+
+        <!-- Discipline -->
+        {% if all_disciplines %}
+        <div class="filter-group">
+          <p class="filter-group-title">Discipline</p>
+          <div class="filter-options">
+            <a href="?{% if query %}q={{ query }}&{% endif %}{% if category %}category={{ category }}&{% endif %}{% if location %}location={{ location }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}"
+               class="filter-option {% if not discipline %}active{% endif %}">
+              <span class="filter-option-label">Toutes</span>
+            </a>
+            {% for d in all_disciplines %}
+            <a href="?discipline={{ d }}{% if query %}&q={{ query }}{% endif %}{% if category %}&category={{ category }}{% endif %}{% if location %}&location={{ location }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+               class="filter-option {% if discipline == d %}active{% endif %}">
+              <span class="filter-option-label">{{ d }}</span>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Catégorie de prestation -->
+        <div class="filter-group">
+          <p class="filter-group-title">Type de prestation</p>
+          <div class="filter-options">
+            <a href="?{% if query %}q={{ query }}&{% endif %}{% if discipline %}discipline={{ discipline }}&{% endif %}{% if location %}location={{ location }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}"
+               class="filter-option {% if not category %}active{% endif %}">
+              <span class="filter-option-label">Tous</span>
+            </a>
+            {% for val, label in category_choices %}
+            <a href="?category={{ val }}{% if query %}&q={{ query }}{% endif %}{% if discipline %}&discipline={{ discipline }}{% endif %}{% if location %}&location={{ location }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+               class="filter-option {% if category == val %}active{% endif %}">
+              <span class="filter-option-label">{{ label }}</span>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Localisation -->
+        {% if all_locations %}
+        <div class="filter-group">
+          <p class="filter-group-title">Ville</p>
+          <div class="filter-select-wrap">
+            <select class="filter-select" onchange="applyLocation(this.value)">
+              <option value="">Toutes les villes</option>
+              {% for loc in all_locations %}
+              <option value="{{ loc }}" {% if location == loc %}selected{% endif %}>{{ loc }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Effacer les filtres -->
+        {% if active_filters %}
+        <a href="{% url 'accounts:artist_list' %}" style="font-size:0.75rem;color:var(--ink-muted);text-decoration:underline;text-underline-offset:2px;">
+          Effacer tous les filtres
+        </a>
+        {% endif %}
+
+      </div>
+    </aside>
+
+    <!-- ── RESULTS ── -->
+    <div>
+
+      <!-- Sort bar -->
+      <div class="sort-bar">
+        <p class="results-meta">
+          <strong>{{ total }}</strong> artiste{{ total|pluralize }} trouvé{{ total|pluralize }}
+          {% if active_filters %} — filtres actifs{% endif %}
+        </p>
+
+        <div class="sort-wrap">
+          <span class="sort-label">Trier par</span>
+          <div class="sort-select-wrap">
+            <select class="sort-select" onchange="applySort(this.value)">
+              <option value="" {% if not sort %}selected{% endif %}>Plus récents</option>
+              <option value="name" {% if sort == 'name' %}selected{% endif %}>Nom A–Z</option>
+              <option value="offerings" {% if sort == 'offerings' %}selected{% endif %}>Plus de prestations</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Active filter tags -->
+      {% if active_filters %}
+      <div class="active-filters">
+        {% if query %}
+        <a href="?{% if discipline %}discipline={{ discipline }}&{% endif %}{% if category %}category={{ category }}&{% endif %}{% if location %}location={{ location }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}"
+           class="filter-tag">
+          « {{ query }} » <span class="remove">×</span>
+        </a>
+        {% endif %}
+        {% if discipline %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if category %}category={{ category }}&{% endif %}{% if location %}location={{ location }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}"
+           class="filter-tag">
+          {{ discipline }} <span class="remove">×</span>
+        </a>
+        {% endif %}
+        {% if category %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if discipline %}discipline={{ discipline }}&{% endif %}{% if location %}location={{ location }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}"
+           class="filter-tag">
+          {% for val, label in category_choices %}{% if val == category %}{{ label }}{% endif %}{% endfor %}
+          <span class="remove">×</span>
+        </a>
+        {% endif %}
+        {% if location %}
+        <a href="?{% if query %}q={{ query }}&{% endif %}{% if discipline %}discipline={{ discipline }}&{% endif %}{% if category %}category={{ category }}&{% endif %}{% if sort %}sort={{ sort }}{% endif %}"
+           class="filter-tag">
+          {{ location }} <span class="remove">×</span>
+        </a>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <!-- Grid -->
+      {% if profiles %}
+      <div class="artist-grid">
+        {% for profile in profiles %}
+        <a href="{% url 'accounts:artist_detail' profile.pk %}" class="artist-card">
+          {% if profile.avatar %}
+            <img class="card-avatar" src="{{ profile.avatar.url }}" alt="{{ profile.user.full_name }}"/>
+          {% else %}
+            <div class="card-avatar-placeholder">{{ profile.user.full_name|slice:":1" }}</div>
+          {% endif %}
+
+          <div class="card-body">
+            {% if profile.discipline %}
+              <p class="card-discipline">{{ profile.discipline }}</p>
+            {% endif %}
+            <h2 class="card-name">{{ profile.user.full_name }}</h2>
+            {% if profile.bio %}
+              <p class="card-bio">{{ profile.bio }}</p>
+            {% endif %}
+
+            <!-- Category badges -->
+            {% with cats=profile.user.offerings.all %}
+            {% if cats %}
+            <div class="card-categories">
+              {% for o in cats|slice:":3" %}
+                <span class="cat-badge">{{ o.get_category_display }}</span>
+              {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="card-meta">
+              {% with count=profile.user.offerings.count %}
+              <span>
+                <span class="card-offerings-count">{{ count }}</span>
+                prestation{{ count|pluralize }}
+              </span>
+              {% endwith %}
+              {% if profile.location %}
+                <span>◎ {{ profile.location }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </a>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="artist-grid">
+        <div class="empty-state">
+          <span class="empty-icon">◎</span>
+          <h2 class="empty-title">Aucun artiste trouvé.</h2>
+          <p class="empty-sub">Essayez d'autres critères ou effacez les filtres.</p>
+          <a href="{% url 'accounts:artist_list' %}"
+             style="font-size:0.82rem;color:var(--accent);text-decoration:underline;text-underline-offset:2px;">
+            Voir tous les artistes
+          </a>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function applySort(val) {
+    const url = new URL(window.location.href);
+    if (val) url.searchParams.set('sort', val);
+    else url.searchParams.delete('sort');
+    window.location.href = url.toString();
+  }
+
+  function applyLocation(val) {
+    const url = new URL(window.location.href);
+    if (val) url.searchParams.set('location', val);
+    else url.searchParams.delete('location');
+    window.location.href = url.toString();
+  }
+</script>
+{% endblock %}

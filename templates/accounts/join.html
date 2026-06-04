@@ -1,0 +1,460 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}ArtHome — Join{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* ── LEFT PANEL ── */
+  .left-panel {
+    background: var(--ink);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 3rem;
+  }
+
+  .left-panel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 80%, rgba(200,169,110,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 20%, rgba(200,169,110,0.08) 0%, transparent 50%);
+    pointer-events: none;
+  }
+
+  .left-noise {
+    position: absolute;
+    inset: 0;
+    opacity: 0.03;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 128px;
+    pointer-events: none;
+  }
+
+  .brand { position: relative; z-index: 1; }
+
+  .brand-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem;
+    font-weight: 300;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .brand-logo span { color: var(--cream); opacity: 0.5; }
+
+  .left-content { position: relative; z-index: 1; }
+
+  .left-headline {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.8rem, 5vw, 4.2rem);
+    font-weight: 300;
+    line-height: 1.1;
+    color: var(--cream);
+    margin-bottom: 1.5rem;
+  }
+
+  .left-headline em { font-style: italic; color: var(--accent); }
+
+  .left-sub {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: rgba(247,244,239,0.5);
+    max-width: 26ch;
+    font-weight: 300;
+    letter-spacing: 0.02em;
+  }
+
+  .left-footer {
+    position: relative;
+    z-index: 1;
+    font-size: 0.75rem;
+    color: rgba(247,244,239,0.25);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .deco-line {
+    width: 40px;
+    height: 1px;
+    background: var(--accent);
+    margin-bottom: 2rem;
+    opacity: 0.6;
+  }
+
+  /* ── RIGHT PANEL ── */
+  .right-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 2rem;
+    background: var(--cream);
+    overflow-y: auto;
+  }
+
+  .form-container {
+    width: 100%;
+    max-width: 400px;
+    animation: fadeUp 0.5s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    padding: 0.75rem 0;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-muted);
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+  }
+
+  .tab-btn::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 2px;
+    background: var(--ink);
+    transform: scaleX(0);
+    transition: transform 0.25s ease;
+  }
+
+  .tab-btn.active { color: var(--ink); }
+  .tab-btn.active::after { transform: scaleX(1); }
+
+  /* ── ROLE SELECTOR ── */
+  .role-select {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-bottom: 1.75rem;
+  }
+
+  .role-card {
+    border: 1.5px solid var(--border);
+    border-radius: 4px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+    background: var(--white);
+  }
+
+  .role-card input[type="radio"] { position: absolute; opacity: 0; width: 0; height: 0; }
+
+  .role-card:has(input:checked) { border-color: var(--ink); background: var(--ink); }
+  .role-card:has(input:checked) .role-title,
+  .role-card:has(input:checked) .role-desc { color: var(--cream); }
+
+  .role-icon { font-size: 1.4rem; margin-bottom: 0.5rem; display: block; }
+
+  .role-title {
+    font-size: 0.8rem; font-weight: 500;
+    letter-spacing: 0.06em; text-transform: uppercase;
+    color: var(--ink); margin-bottom: 0.2rem; transition: color 0.2s;
+  }
+
+  .role-desc {
+    font-size: 0.72rem; color: var(--ink-muted);
+    line-height: 1.4; font-weight: 300; transition: color 0.2s;
+  }
+
+  /* ── FORM PANELS ── */
+  .form-panel { display: none; }
+  .form-panel.active { display: block; }
+
+  .form-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.9rem; font-weight: 400;
+    color: var(--ink); margin-bottom: 0.3rem; line-height: 1.2;
+  }
+
+  .form-subtitle {
+    font-size: 0.8rem; color: var(--ink-muted);
+    margin-bottom: 2rem; font-weight: 300;
+  }
+
+  .field { margin-bottom: 1.1rem; }
+
+  .field label {
+    display: block; font-size: 0.72rem; font-weight: 500;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--ink-muted); margin-bottom: 0.4rem;
+  }
+
+  .field input {
+    width: 100%; padding: 0.7rem 0.9rem;
+    border: 1.5px solid var(--border); border-radius: 3px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    font-weight: 300; background: var(--white); color: var(--ink);
+    outline: none; transition: border-color 0.2s;
+  }
+
+  .field input:focus { border-color: var(--ink); }
+
+  .field-error {
+    font-size: 0.72rem; color: #c0392b;
+    margin-top: 0.3rem; display: block;
+  }
+
+  .role-notice {
+    font-size: 0.75rem; color: var(--ink-muted);
+    background: var(--accent-light); border-radius: 3px;
+    padding: 0.6rem 0.8rem; margin-bottom: 1.2rem; font-weight: 300;
+  }
+
+  .role-notice strong { font-weight: 500; color: var(--ink); }
+
+  .artist-fields { display: none; }
+  .artist-fields.visible { display: block; }
+
+  .section-label {
+    font-size: 0.7rem; font-weight: 500;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--accent); margin: 1.2rem 0 0.8rem;
+    display: flex; align-items: center; gap: 0.5rem;
+  }
+
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--accent-light);
+  }
+
+  .submit-btn {
+    width: 100%; padding: 0.85rem;
+    background: var(--ink); color: var(--cream);
+    border: none; border-radius: 3px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.8rem;
+    font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+    cursor: pointer; margin-top: 1.5rem;
+    transition: background 0.2s, transform 0.15s;
+  }
+
+  .submit-btn:hover { background: #2e2a27; transform: translateY(-1px); }
+  .submit-btn:active { transform: translateY(0); }
+
+  .divider {
+    display: flex; align-items: center; gap: 0.75rem;
+    margin: 1.25rem 0; color: var(--border);
+    font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  .switch-text {
+    text-align: center; font-size: 0.78rem;
+    color: var(--ink-muted); font-weight: 300;
+  }
+
+  .switch-text a {
+    color: var(--ink); text-decoration: underline;
+    text-underline-offset: 2px; cursor: pointer;
+  }
+
+  @media (max-width: 700px) {
+    .page { grid-template-columns: 1fr; }
+    .left-panel { display: none; }
+    .right-panel { padding: 2.5rem 1.5rem; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page">
+
+  <!-- LEFT PANEL -->
+  <div class="left-panel">
+    <div class="left-noise"></div>
+    <div class="brand">
+      <a href="{% url 'core:home' %}" class="brand-logo">Art<span>/</span>Home</a>
+    </div>
+    <div class="left-content">
+      <div class="deco-line"></div>
+      <h1 class="left-headline">
+        L'art qui vient<br><em>chez vous.</em>
+      </h1>
+      <p class="left-sub">
+        Des artistes qui se déplacent chez vous pour animer ateliers, concerts et prestations dans votre espace.
+      </p>
+    </div>
+    <div class="left-footer">© 2026 ArtHome</div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+    <div class="form-container">
+
+      <!-- TABS -->
+      <div class="tabs">
+        <button class="tab-btn {% if active_tab == 'login' %}active{% endif %}"
+                onclick="switchTab('login', this)" type="button">Connexion</button>
+        <button class="tab-btn {% if active_tab == 'register' %}active{% endif %}"
+                onclick="switchTab('register', this)" type="button">Créer un compte</button>
+      </div>
+
+      <!-- LOGIN FORM -->
+      <div class="form-panel {% if active_tab == 'login' %}active{% endif %}" id="panel-login">
+        <h2 class="form-title">Bon retour.</h2>
+        <p class="form-subtitle">Connectez-vous à votre compte</p>
+        <form method="post">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="login"/>
+          <div class="field">
+            <label for="{{ login_form.username.id_for_label }}">Email</label>
+            {{ login_form.username }}
+            {% if login_form.username.errors %}
+              <span class="field-error">{{ login_form.username.errors.0 }}</span>
+            {% endif %}
+          </div>
+          <div class="field">
+            <label for="{{ login_form.password.id_for_label }}">Password</label>
+            {{ login_form.password }}
+            {% if login_form.non_field_errors %}
+              <span class="field-error">{{ login_form.non_field_errors.0 }}</span>
+            {% endif %}
+          </div>
+          <button class="submit-btn" type="submit">Se connecter</button>
+        </form>
+        <div class="divider">ou</div>
+        <p class="switch-text">Pas encore de compte ?
+          <a onclick="switchTab('register', document.querySelectorAll('.tab-btn')[1])">En créer un</a>
+        </p>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="form-panel {% if active_tab == 'register' %}active{% endif %}" id="panel-register">
+        <h2 class="form-title">Rejoindre ArtHome.</h2>
+        <p class="form-subtitle">Comment souhaitez-vous participer ?</p>
+        <form method="post" id="register-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="register"/>
+
+          <!-- Role selector -->
+          <div class="role-select">
+            <label class="role-card">
+              <input type="radio" name="role" value="client"
+                     {% if not register_form.role.value or register_form.role.value == 'client' %}checked{% endif %}
+                     onchange="updateRole('client')"/>
+              <span class="role-icon">🏠</span>
+              <div class="role-title">Hôte</div>
+              <div class="role-desc">Invitez un artiste chez vous</div>
+            </label>
+            <label class="role-card">
+              <input type="radio" name="role" value="artist"
+                     {% if register_form.role.value == 'artist' %}checked{% endif %}
+                     onchange="updateRole('artist')"/>
+              <span class="role-icon">✦</span>
+              <div class="role-title">Artiste</div>
+              <div class="role-desc">Proposez vos ateliers à domicile</div>
+            </label>
+          </div>
+
+          <div class="role-notice" id="role-notice">
+            {% if register_form.role.value == 'artist' %}
+              Inscription en tant qu'<strong>Artiste</strong> — proposez vos ateliers et déplacez-vous chez vos hôtes.
+            {% else %}
+              Inscription en tant qu'<strong>Hôte</strong> — invitez des artistes à animer une prestation chez vous.
+            {% endif %}
+          </div>
+
+          <div class="field">
+            <label for="{{ register_form.full_name.id_for_label }}">Nom complet</label>
+            {{ register_form.full_name }}
+            {% if register_form.full_name.errors %}
+              <span class="field-error">{{ register_form.full_name.errors.0 }}</span>
+            {% endif %}
+          </div>
+          <div class="field">
+            <label for="{{ register_form.email.id_for_label }}">Email</label>
+            {{ register_form.email }}
+            {% if register_form.email.errors %}
+              <span class="field-error">{{ register_form.email.errors.0 }}</span>
+            {% endif %}
+          </div>
+          <div class="field">
+            <label for="{{ register_form.password.id_for_label }}">Password</label>
+            {{ register_form.password }}
+            {% if register_form.password.errors %}
+              <span class="field-error">{{ register_form.password.errors.0 }}</span>
+            {% endif %}
+          </div>
+
+          <!-- Artist-only fields -->
+          <div class="artist-fields {% if register_form.role.value == 'artist' %}visible{% endif %}"
+               id="artist-fields">
+            <div class="section-label">Profil artiste</div>
+            <div class="field">
+              <label for="{{ register_form.discipline.id_for_label }}">Discipline</label>
+              {{ register_form.discipline }}
+            </div>
+            <div class="field">
+              <label for="{{ register_form.bio.id_for_label }}">Courte bio</label>
+              {{ register_form.bio }}
+            </div>
+          </div>
+
+          <button class="submit-btn" type="submit">Créer mon compte</button>
+        </form>
+        <div class="divider">ou</div>
+        <p class="switch-text">Déjà un compte ?
+          <a onclick="switchTab('login', document.querySelectorAll('.tab-btn')[0])">Se connecter</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  function switchTab(tab, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+  }
+
+  function updateRole(role) {
+    const notice = document.getElementById('role-notice');
+    const artistFields = document.getElementById('artist-fields');
+    if (role === 'artist') {
+      notice.innerHTML = 'Inscription en tant qu\'<strong>Artiste</strong> — proposez vos ateliers et déplacez-vous chez vos hôtes.';
+      artistFields.classList.add('visible');
+    } else {
+      notice.innerHTML = 'Inscription en tant qu\'<strong>Hôte</strong> — invitez des artistes à animer une prestation chez vous.';
+      artistFields.classList.remove('visible');
+    }
+  }
+</script>
+{% endblock %}

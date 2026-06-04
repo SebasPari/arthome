@@ -1,0 +1,511 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ profile.user.full_name }} — ArtHome{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-wrapper {
+    min-height: 100vh;
+    background: var(--cream);
+    padding-top: 5rem;
+  }
+
+  /* ── PROFILE HERO ── */
+  .profile-hero {
+    background: var(--ink);
+    padding: 4rem 3rem 3rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .profile-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 60% 80% at 90% 50%, rgba(200,169,110,0.10) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .profile-hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 2.5rem;
+  }
+
+  .profile-avatar {
+    width: 110px;
+    height: 110px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    border: 2px solid rgba(200,169,110,0.3);
+  }
+
+  .profile-avatar-placeholder {
+    width: 110px;
+    height: 110px;
+    border-radius: 4px;
+    background: rgba(247,244,239,0.06);
+    border: 2px solid rgba(200,169,110,0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem;
+    font-weight: 300;
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .profile-info { flex: 1; }
+
+  .profile-discipline {
+    font-size: 0.68rem;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.4rem;
+  }
+
+  .profile-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 300;
+    color: var(--cream);
+    line-height: 1.05;
+    margin-bottom: 0.5rem;
+  }
+
+  .profile-bio {
+    font-size: 0.875rem;
+    color: rgba(247,244,239,0.55);
+    font-weight: 300;
+    line-height: 1.6;
+    max-width: 50ch;
+  }
+
+  .profile-meta-row {
+    display: flex;
+    gap: 1.5rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+
+  .profile-meta-item {
+    font-size: 0.75rem;
+    color: rgba(247,244,239,0.4);
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  /* ── BACK LINK ── */
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(247,244,239,0.4);
+    text-decoration: none;
+    margin-bottom: 2rem;
+    transition: color 0.2s;
+  }
+
+  .back-link:hover { color: var(--accent); }
+
+  /* ── BODY ── */
+  .profile-body {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 3rem;
+    align-items: start;
+  }
+
+  /* ── OFFERINGS SECTION ── */
+  .section-heading {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.7rem;
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .offering-list { display: flex; flex-direction: column; gap: 1rem; }
+
+  .offering-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1.25rem;
+    align-items: flex-start;
+    transition: box-shadow 0.2s;
+  }
+
+  .offering-card:hover { box-shadow: 0 4px 16px rgba(26,23,20,0.07); }
+
+  .offering-image {
+    width: 80px;
+    height: 80px;
+    border-radius: 3px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: var(--ink);
+  }
+
+  .offering-image-placeholder {
+    width: 80px;
+    height: 80px;
+    border-radius: 3px;
+    background: var(--cream);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+  }
+
+  .offering-info { flex: 1; }
+
+  .offering-category {
+    font-size: 0.65rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.3rem;
+  }
+
+  .offering-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 0.4rem;
+  }
+
+  .offering-desc {
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    line-height: 1.55;
+    font-weight: 300;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .offering-footer {
+    margin-top: 0.75rem;
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    font-size: 0.75rem;
+    color: var(--ink-muted);
+  }
+
+  .offering-price {
+    font-weight: 500;
+    color: var(--ink);
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.75rem;
+    position: sticky;
+    top: 6rem;
+  }
+
+  .sidebar-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+
+  .contact-btn {
+    display: block;
+    width: 100%;
+    padding: 0.85rem;
+    background: var(--ink);
+    color: var(--cream);
+    border: none;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s;
+    margin-bottom: 0.75rem;
+  }
+
+  .contact-btn:hover { background: #2e2a27; }
+
+  .sidebar-note {
+    font-size: 0.72rem;
+    color: var(--ink-muted);
+    text-align: center;
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 1.25rem 0;
+  }
+
+  .sidebar-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .sidebar-detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.78rem;
+  }
+
+  .sidebar-detail-label {
+    color: var(--ink-muted);
+    font-weight: 300;
+  }
+
+  .sidebar-detail-value {
+    color: var(--ink);
+    font-weight: 400;
+    text-align: right;
+  }
+
+  /* ── EMPTY OFFERINGS ── */
+  .no-offerings {
+    padding: 3rem 2rem;
+    text-align: center;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--ink-muted);
+    font-size: 0.85rem;
+    font-weight: 300;
+  }
+
+  @media (max-width: 900px) {
+    .profile-body { grid-template-columns: 1fr; }
+    .sidebar-card { position: static; }
+  }
+
+  @media (max-width: 700px) {
+    .profile-hero { padding: 3rem 1.5rem 2rem; }
+    .profile-hero-inner { flex-direction: column; align-items: flex-start; gap: 1.25rem; }
+    .profile-body { padding: 2rem 1.5rem; gap: 2rem; }
+  }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+
+  <!-- NAVBAR -->
+  <nav class="navbar scrolled" id="navbar">
+    <a href="{% url 'core:home' %}" class="nav-logo" style="color:var(--accent)">Art<span style="opacity:0.5">/</span>Home</a>
+    <ul class="nav-links">
+      <li><a href="{% url 'accounts:artist_list' %}" style="color:var(--ink-muted)">Trouver un artiste</a></li>
+      {% if user.is_authenticated %}
+        {% if user.is_artist %}
+          <li><a href="{% url 'offerings:artist_bookings' %}" style="color:var(--ink-muted)">Demandes reçues</a></li>
+        {% else %}
+          <li><a href="{% url 'offerings:host_bookings' %}" style="color:var(--ink-muted)">Mes demandes</a></li>
+        {% endif %}
+        <li><a href="{% url 'accounts:logout' %}" style="color:var(--ink-muted)">Déconnexion</a></li>
+      {% else %}
+        <li><a href="{% url 'accounts:join' %}" class="nav-cta" style="border-color:var(--ink);color:var(--ink)!important">Rejoindre</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+
+  <!-- PROFILE HERO -->
+  <div class="profile-hero">
+    <div class="profile-hero-inner">
+      <a href="{% url 'accounts:artist_list' %}" class="back-link" style="width:100%;margin-bottom:1.5rem;">← Artistes</a>
+
+      {% if profile.avatar %}
+        <img class="profile-avatar" src="{{ profile.avatar.url }}" alt="{{ profile.user.full_name }}"/>
+      {% else %}
+        <div class="profile-avatar-placeholder">{{ profile.user.full_name|slice:":1" }}</div>
+      {% endif %}
+
+      <div class="profile-info">
+        {% if profile.discipline %}
+          <p class="profile-discipline">{{ profile.discipline }}</p>
+        {% endif %}
+        <h1 class="profile-name">{{ profile.user.full_name }}</h1>
+        {% if profile.bio %}
+          <p class="profile-bio">{{ profile.bio }}</p>
+        {% endif %}
+        <div class="profile-meta-row">
+          {% if profile.location %}
+            <span class="profile-meta-item">◎ {{ profile.location }}</span>
+          {% endif %}
+          {% if profile.website %}
+            <a class="profile-meta-item" href="{{ profile.website }}" target="_blank"
+               style="color:rgba(247,244,239,0.4);text-decoration:none;">
+              ↗ Website
+            </a>
+          {% endif %}
+          <span class="profile-meta-item">{{ offerings.count }} prestation{{ offerings.count|pluralize }} à domicile</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="profile-body">
+
+    <!-- OFFERINGS -->
+    <div>
+      <h2 class="section-heading">
+        Prestations à domicile
+        {% if user == profile.user %}
+          <a href="{% url 'offerings:create' %}"
+             style="font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;color:var(--accent);text-decoration:none;margin-left:0.5rem;">
+            + Ajouter
+          </a>
+        {% endif %}
+      </h2>
+
+      {% if offerings %}
+      <div class="offering-list">
+        {% for offering in offerings %}
+        <div class="offering-card">
+          {% if offering.image %}
+            <img class="offering-image" src="{{ offering.image.url }}" alt="{{ offering.title }}"/>
+          {% else %}
+            <div class="offering-image-placeholder">
+              {% if offering.category == 'class' %}🎓
+              {% elif offering.category == 'event' %}🎪
+              {% elif offering.category == 'commission' %}🖼
+              {% else %}🎭{% endif %}
+            </div>
+          {% endif %}
+          <div class="offering-info">
+            <p class="offering-category">{{ offering.get_category_display }}</p>
+            <h3 class="offering-title">{{ offering.title }}</h3>
+            <p class="offering-desc">{{ offering.description }}</p>
+            <div class="offering-footer">
+              <span class="offering-price">{{ offering.price_display }}</span>
+              {% if offering.location %}
+                <span>◎ {{ offering.location }}</span>
+              {% endif %}
+              {% if offering.date_time %}
+                <span>{{ offering.date_time|date:"j M Y" }}</span>
+              {% endif %}
+              {% if user == profile.user %}
+                <span style="margin-left:auto;display:flex;gap:0.75rem;">
+                  <a href="{% url 'offerings:edit' offering.pk %}"
+                     style="font-size:0.72rem;color:var(--ink-muted);text-decoration:underline;text-underline-offset:2px;">
+                    Modifier
+                  </a>
+                  <a href="{% url 'offerings:delete' offering.pk %}"
+                     style="font-size:0.72rem;color:#c0392b;text-decoration:underline;text-underline-offset:2px;">
+                    Supprimer
+                  </a>
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="no-offerings">
+        Cet artiste n'a pas encore listé de prestations.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside>
+      <div class="sidebar-card">
+        <h3 class="sidebar-title">Inviter {{ profile.user.full_name|truncatewords:2 }}</h3>
+
+        {% if user == profile.user %}
+          <!-- C'est le propriétaire du profil -->
+          <a href="{% url 'accounts:profile_edit' %}" class="contact-btn"
+             style="background:var(--accent);color:var(--ink);">
+            ✎ Modifier mon profil
+          </a>
+          <p class="sidebar-note">Voici comment les hôtes voient votre profil.</p>
+        {% elif user.is_authenticated %}
+          <a href="{% url 'offerings:booking_create' artist_pk=profile.pk %}" class="contact-btn">
+            Envoyer une demande
+          </a>
+          <p class="sidebar-note">L'artiste recevra votre demande et vous répondra directement.</p>
+        {% else %}
+          <a href="{% url 'accounts:join' %}" class="contact-btn">Se connecter pour inviter</a>
+          <p class="sidebar-note">Créez un compte gratuit pour inviter cet artiste chez vous.</p>
+        {% endif %}
+
+        {% if profile.discipline or profile.location %}
+        <div class="sidebar-divider"></div>
+        <div class="sidebar-detail">
+          {% if profile.discipline %}
+          <div class="sidebar-detail-row">
+            <span class="sidebar-detail-label">Discipline</span>
+            <span class="sidebar-detail-value">{{ profile.discipline }}</span>
+          </div>
+          {% endif %}
+          {% if profile.location %}
+          <div class="sidebar-detail-row">
+            <span class="sidebar-detail-label">Location</span>
+            <span class="sidebar-detail-value">{{ profile.location }}</span>
+          </div>
+          {% endif %}
+          <div class="sidebar-detail-row">
+            <span class="sidebar-detail-label">Prestations</span>
+            <span class="sidebar-detail-value">{{ offerings.count }}</span>
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </aside>
+
+  </div>
+</div>
+{% endblock %}

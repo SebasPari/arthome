@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Tableau de bord — ArtHome{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-wrapper { min-height:100vh; background:var(--cream); padding-top:5rem; }
+
+  /* ── HEADER ── */
+  .dash-header {
+    background:var(--ink); padding:3rem 3rem 2.5rem;
+    position:relative; overflow:hidden;
+  }
+  .dash-header::before {
+    content:''; position:absolute; inset:0;
+    background:radial-gradient(ellipse 60% 100% at 100% 50%, rgba(200,169,110,0.12) 0%, transparent 60%);
+    pointer-events:none;
+  }
+  .dash-header-inner {
+    position:relative; z-index:1; max-width:1100px; margin:0 auto;
+    display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:1.5rem;
+  }
+  .dash-greeting-label { font-size:0.7rem; font-weight:500; letter-spacing:0.15em; text-transform:uppercase; color:var(--accent); margin-bottom:0.4rem; }
+  .dash-greeting { font-family:'Cormorant Garamond',serif; font-size:clamp(2rem,4vw,3rem); font-weight:300; color:var(--cream); line-height:1.1; }
+  .dash-greeting em { font-style:italic; color:var(--accent); }
+
+  /* Stats row */
+  .stats-row { display:flex; gap:1rem; flex-wrap:wrap; }
+  .stat-chip {
+    background:rgba(247,244,239,0.07); border:1px solid rgba(247,244,239,0.1);
+    border-radius:4px; padding:0.75rem 1.25rem; text-align:center; min-width:90px;
+  }
+  .stat-chip-num { font-family:'Cormorant Garamond',serif; font-size:2rem; font-weight:300; color:var(--accent); line-height:1; }
+  .stat-chip-label { font-size:0.62rem; font-weight:500; letter-spacing:0.1em; text-transform:uppercase; color:rgba(247,244,239,0.4); margin-top:0.2rem; }
+
+  /* ── BODY ── */
+  .dash-body { max-width:1100px; margin:0 auto; padding:2.5rem 3rem; display:grid; grid-template-columns:1fr 320px; gap:2.5rem; align-items:start; }
+
+  /* ── SECTION ── */
+  .section { margin-bottom:2.5rem; }
+  .section:last-child { margin-bottom:0; }
+
+  .section-heading {
+    font-family:'Cormorant Garamond',serif; font-size:1.5rem; font-weight:300; color:var(--ink);
+    margin-bottom:1.1rem; display:flex; align-items:center; justify-content:space-between;
+  }
+  .section-heading-line { display:flex; align-items:center; gap:0.75rem; }
+  .section-heading-line::after { content:''; display:block; width:40px; height:1px; background:var(--border); }
+  .section-link { font-family:'DM Sans',sans-serif; font-size:0.72rem; font-weight:500; letter-spacing:0.08em; text-transform:uppercase; color:var(--accent); text-decoration:none; }
+  .section-link:hover { opacity:0.75; }
+
+  /* Pending booking cards */
+  .booking-card {
+    background:var(--white); border:1px solid var(--border); border-radius:4px;
+    padding:1.25rem 1.5rem; margin-bottom:0.75rem; display:grid; grid-template-columns:1fr auto; gap:1rem; align-items:start;
+  }
+  .booking-card:last-child { margin-bottom:0; }
+
+  .bc-host { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:400; color:var(--ink); margin-bottom:0.2rem; }
+  .bc-offering { font-size:0.75rem; color:var(--ink-muted); font-weight:300; margin-bottom:0.6rem; }
+  .bc-meta { display:flex; gap:1rem; font-size:0.72rem; color:var(--ink-muted); flex-wrap:wrap; }
+
+  .bc-actions { display:flex; flex-direction:column; gap:0.5rem; align-items:flex-end; }
+
+  .btn-sm-confirm {
+    padding:0.4rem 0.9rem; background:var(--ink); color:var(--cream); border:none;
+    border-radius:3px; font-family:'DM Sans',sans-serif; font-size:0.68rem; font-weight:500;
+    letter-spacing:0.08em; text-transform:uppercase; cursor:pointer; white-space:nowrap;
+    transition:background 0.2s;
+  }
+  .btn-sm-confirm:hover { background:#2e2a27; }
+
+  .btn-sm-decline {
+    padding:0.4rem 0.9rem; background:none; color:#c62828;
+    border:1px solid #ef9a9a; border-radius:3px; font-family:'DM Sans',sans-serif;
+    font-size:0.68rem; font-weight:500; letter-spacing:0.08em; text-transform:uppercase;
+    cursor:pointer; white-space:nowrap; transition:border-color 0.2s;
+  }
+  .btn-sm-decline:hover { border-color:#c62828; }
+
+  .btn-sm-link { font-size:0.68rem; color:var(--ink-muted); text-decoration:underline; text-underline-offset:2px; text-decoration-color:var(--border); white-space:nowrap; }
+  .btn-sm-link:hover { color:var(--ink); }
+
+  /* Offering list */
+  .offering-row {
+    background:var(--white); border:1px solid var(--border); border-radius:4px;
+    padding:1rem 1.25rem; margin-bottom:0.6rem;
+    display:flex; align-items:center; gap:1rem;
+  }
+  .offering-row:last-child { margin-bottom:0; }
+
+  .offering-row-img {
+    width:52px; height:52px; border-radius:3px; object-fit:cover;
+    background:var(--ink); flex-shrink:0; display:flex; align-items:center;
+    justify-content:center; font-size:1.2rem;
+  }
+
+  .offering-row-info { flex:1; min-width:0; }
+  .offering-row-title { font-size:0.9rem; font-weight:400; color:var(--ink); margin-bottom:0.15rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .offering-row-meta { font-size:0.72rem; color:var(--ink-muted); font-weight:300; }
+
+  .offering-row-actions { display:flex; gap:0.5rem; flex-shrink:0; }
+  .btn-edit-sm {
+    padding:0.35rem 0.8rem; border:1px solid var(--border); border-radius:3px;
+    font-size:0.68rem; font-weight:500; letter-spacing:0.06em; text-transform:uppercase;
+    color:var(--ink-muted); text-decoration:none; transition:border-color 0.2s, color 0.2s;
+  }
+  .btn-edit-sm:hover { border-color:var(--ink); color:var(--ink); }
+
+  /* Empty */
+  .empty-row {
+    text-align:center; padding:2rem; background:var(--white); border:1px solid var(--border);
+    border-radius:4px; font-size:0.82rem; color:var(--ink-muted); font-weight:300;
+  }
+
+  /* ── SIDEBAR ── */
+  .sidebar { display:flex; flex-direction:column; gap:1.25rem; }
+
+  .sidebar-card { background:var(--white); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+
+  .sidebar-card-body { padding:1.25rem; }
+
+  .sidebar-card-title { font-family:'Cormorant Garamond',serif; font-size:1.2rem; font-weight:400; color:var(--ink); margin-bottom:1rem; }
+
+  .sidebar-avatar {
+    width:100%; aspect-ratio:3/2; object-fit:cover; display:block; background:var(--ink);
+  }
+  .sidebar-avatar-placeholder {
+    width:100%; aspect-ratio:3/2; background:var(--ink);
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Cormorant Garamond',serif; font-size:4rem; font-weight:300; color:var(--accent);
+  }
+
+  .sidebar-discipline { font-size:0.65rem; font-weight:500; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent); margin-bottom:0.3rem; }
+  .sidebar-name { font-family:'Cormorant Garamond',serif; font-size:1.3rem; font-weight:400; color:var(--ink); margin-bottom:0.4rem; }
+  .sidebar-bio { font-size:0.78rem; color:var(--ink-muted); line-height:1.55; font-weight:300; margin-bottom:1rem; display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+
+  .sidebar-links { display:flex; flex-direction:column; gap:0.5rem; }
+  .sidebar-link {
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0.65rem 0.9rem; border:1px solid var(--border); border-radius:3px;
+    font-size:0.78rem; font-weight:400; color:var(--ink); text-decoration:none;
+    transition:border-color 0.2s, background 0.2s;
+  }
+  .sidebar-link:hover { border-color:var(--ink); background:var(--cream); }
+  .sidebar-link-arrow { color:var(--ink-muted); font-size:0.8rem; }
+
+  .btn-full {
+    display:block; width:100%; padding:0.75rem; background:var(--ink); color:var(--cream);
+    border:none; border-radius:3px; font-family:'DM Sans',sans-serif; font-size:0.78rem;
+    font-weight:500; letter-spacing:0.1em; text-transform:uppercase; text-align:center;
+    text-decoration:none; transition:background 0.2s; margin-top:0.75rem;
+  }
+  .btn-full:hover { background:#2e2a27; }
+
+  .btn-full-accent {
+    display:block; width:100%; padding:0.75rem; background:var(--accent); color:var(--ink);
+    border:none; border-radius:3px; font-family:'DM Sans',sans-serif; font-size:0.78rem;
+    font-weight:500; letter-spacing:0.1em; text-transform:uppercase; text-align:center;
+    text-decoration:none; transition:background 0.2s;
+  }
+  .btn-full-accent:hover { background:#d4b87a; }
+
+  @media (max-width:900px) { .dash-body { grid-template-columns:1fr; } }
+  @media (max-width:700px) { .dash-header { padding:2.5rem 1.5rem 2rem; } .dash-body { padding:1.5rem; } .booking-card { grid-template-columns:1fr; } .bc-actions { flex-direction:row; align-items:flex-start; } }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+
+  <!-- NAVBAR -->
+  <nav class="navbar scrolled">
+    <a href="{% url 'core:home' %}" class="nav-logo" style="color:var(--accent)">Art<span style="opacity:0.5">/</span>Home</a>
+    <ul class="nav-links">
+      <li><a href="{% url 'core:dashboard' %}" style="color:var(--ink)">Tableau de bord</a></li>
+      <li><a href="{% url 'accounts:artist_detail' pk=profile.pk %}" style="color:var(--ink-muted)">Mon profil</a></li>
+      <li><a href="{% url 'accounts:logout' %}" style="color:var(--ink-muted)">Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <!-- HEADER -->
+  <div class="dash-header">
+    <div class="dash-header-inner">
+      <div>
+        <p class="dash-greeting-label">Artiste</p>
+        <h1 class="dash-greeting">Bonjour, <em>{{ request.user.full_name|truncatewords:2 }}</em></h1>
+      </div>
+      <div class="stats-row">
+        <div class="stat-chip">
+          <p class="stat-chip-num">{{ pending.count }}</p>
+          <p class="stat-chip-label">En attente</p>
+        </div>
+        <div class="stat-chip">
+          <p class="stat-chip-num">{{ confirmed.count }}</p>
+          <p class="stat-chip-label">Confirmées</p>
+        </div>
+        <div class="stat-chip">
+          <p class="stat-chip-num">{{ offerings.count }}</p>
+          <p class="stat-chip-label">Prestations</p>
+        </div>
+        <div class="stat-chip">
+          <p class="stat-chip-num">{{ total_bookings }}</p>
+          <p class="stat-chip-label">Total demandes</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="dash-body">
+    <div>
+
+      <!-- Demandes en attente -->
+      <div class="section">
+        <div class="section-heading">
+          <span class="section-heading-line">
+            Demandes en attente
+            {% if pending.count %}<span style="font-family:'DM Sans',sans-serif;font-size:0.75rem;color:var(--ink-muted);font-weight:300;">({{ pending.count }})</span>{% endif %}
+          </span>
+          <a href="{% url 'offerings:artist_bookings' %}" class="section-link">Tout voir →</a>
+        </div>
+
+        {% if pending %}
+          {% for b in pending|slice:":5" %}
+          <div class="booking-card">
+            <div>
+              <p class="bc-host">{{ b.host.full_name }}</p>
+              <p class="bc-offering">pour « {{ b.offering.title }} »</p>
+              <div class="bc-meta">
+                {% if b.date_wish %}<span>📅 {{ b.date_wish|date:"j M Y" }}</span>{% endif %}
+                <span>👥 {{ b.guests }} participant{{ b.guests|pluralize }}</span>
+                <span>Il y a {{ b.created_at|timesince }}</span>
+              </div>
+              {% if b.message %}
+              <p style="margin-top:0.6rem;font-size:0.78rem;color:var(--ink-muted);font-weight:300;font-style:italic;">
+                «&nbsp;{{ b.message|truncatechars:100 }}&nbsp;»
+              </p>
+              {% endif %}
+            </div>
+            <div class="bc-actions">
+              <form method="post" action="{% url 'offerings:booking_respond' b.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="confirm"/>
+                <input type="hidden" name="artist_note" value=""/>
+                <button class="btn-sm-confirm" type="submit">✓ Confirmer</button>
+              </form>
+              <form method="post" action="{% url 'offerings:booking_respond' b.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="decline"/>
+                <input type="hidden" name="artist_note" value=""/>
+                <button class="btn-sm-decline" type="submit">✕ Refuser</button>
+              </form>
+              <a href="{% url 'offerings:booking_respond' b.pk %}" class="btn-sm-link">Avec message →</a>
+            </div>
+          </div>
+          {% endfor %}
+          {% if pending.count > 5 %}
+          <p style="text-align:center;margin-top:0.75rem;">
+            <a href="{% url 'offerings:artist_bookings' %}" class="section-link">
+              + {{ pending.count|add:"-5" }} autre{{ pending.count|add:"-5"|pluralize }} demande{{ pending.count|add:"-5"|pluralize }}
+            </a>
+          </p>
+          {% endif %}
+        {% else %}
+          <div class="empty-row">Aucune demande en attente.</div>
+        {% endif %}
+      </div>
+
+      <!-- Mes prestations -->
+      <div class="section">
+        <div class="section-heading">
+          <span class="section-heading-line">Mes prestations actives</span>
+          <a href="{% url 'offerings:create' %}" class="section-link">+ Ajouter</a>
+        </div>
+
+        {% if offerings %}
+          {% for o in offerings %}
+          <div class="offering-row">
+            <div class="offering-row-img">
+              {% if o.image %}
+                <img style="width:52px;height:52px;object-fit:cover;border-radius:3px;" src="{{ o.image.url }}" alt=""/>
+              {% else %}
+                {% if o.category == 'class' %}🎓{% elif o.category == 'event' %}🎪{% elif o.category == 'commission' %}🖼{% else %}🎭{% endif %}
+              {% endif %}
+            </div>
+            <div class="offering-row-info">
+              <p class="offering-row-title">{{ o.title }}</p>
+              <p class="offering-row-meta">{{ o.get_category_display }} · {{ o.price_display }}</p>
+            </div>
+            <div class="offering-row-actions">
+              <a href="{% url 'offerings:edit' o.pk %}" class="btn-edit-sm">Modifier</a>
+            </div>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="empty-row">
+            Aucune prestation active.
+            <a href="{% url 'offerings:create' %}" style="color:var(--accent);text-decoration:underline;text-underline-offset:2px;margin-left:0.4rem;">En créer une</a>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Confirmées récentes -->
+      {% if confirmed %}
+      <div class="section">
+        <div class="section-heading">
+          <span class="section-heading-line">Demandes confirmées</span>
+        </div>
+        {% for b in confirmed|slice:":3" %}
+        <div class="booking-card" style="border-color:#a5d6a7;">
+          <div>
+            <p class="bc-host">{{ b.host.full_name }}</p>
+            <p class="bc-offering">pour « {{ b.offering.title }} »</p>
+            <div class="bc-meta">
+              {% if b.date_wish %}<span>📅 {{ b.date_wish|date:"j M Y" }}</span>{% endif %}
+              <span>👥 {{ b.guests }} participant{{ b.guests|pluralize }}</span>
+              {% if b.address %}<span>📍 {{ b.address }}</span>{% endif %}
+            </div>
+          </div>
+          <span style="padding:0.3rem 0.75rem;border-radius:99px;font-size:0.68rem;font-weight:500;background:#e8f5e9;color:#2e7d32;border:1px solid #a5d6a7;white-space:nowrap;">Confirmée</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+
+      <!-- Profile card -->
+      <div class="sidebar-card">
+        {% if profile.avatar %}
+          <img class="sidebar-avatar" src="{{ profile.avatar.url }}" alt="{{ request.user.full_name }}"/>
+        {% else %}
+          <div class="sidebar-avatar-placeholder">{{ request.user.full_name|slice:":1" }}</div>
+        {% endif %}
+        <div class="sidebar-card-body">
+          {% if profile.discipline %}<p class="sidebar-discipline">{{ profile.discipline }}</p>{% endif %}
+          <p class="sidebar-name">{{ request.user.full_name }}</p>
+          {% if profile.bio %}<p class="sidebar-bio">{{ profile.bio }}</p>{% endif %}
+          <a href="{% url 'accounts:artist_detail' pk=profile.pk %}" class="btn-full-accent">Voir mon profil public</a>
+          <a href="{% url 'accounts:profile_edit' %}" class="btn-full">Modifier le profil</a>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="sidebar-card">
+        <div class="sidebar-card-body">
+          <p class="sidebar-card-title">Raccourcis</p>
+          <div class="sidebar-links">
+            <a href="{% url 'offerings:create' %}" class="sidebar-link">
+              <span>✦ Nouvelle prestation</span>
+              <span class="sidebar-link-arrow">→</span>
+            </a>
+            <a href="{% url 'offerings:artist_bookings' %}" class="sidebar-link">
+              <span>📋 Toutes les demandes</span>
+              <span class="sidebar-link-arrow">→</span>
+            </a>
+            <a href="{% url 'accounts:artist_list' %}" class="sidebar-link">
+              <span>🔍 Voir les autres artistes</span>
+              <span class="sidebar-link-arrow">→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</div>
+{% endblock %}

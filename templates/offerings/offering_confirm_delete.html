@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}Supprimer « {{ offering.title }} » — ArtHome{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-wrapper {
+    min-height: 100vh;
+    background: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .confirm-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 3rem 2.5rem;
+    max-width: 480px;
+    width: 100%;
+    text-align: center;
+    animation: fadeUp 0.3s ease both;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .confirm-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1.25rem;
+    display: block;
+  }
+
+  .confirm-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.9rem;
+    font-weight: 300;
+    color: var(--ink);
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
+  }
+
+  .confirm-sub {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+    font-weight: 300;
+    line-height: 1.6;
+    margin-bottom: 2rem;
+  }
+
+  .confirm-sub strong {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .confirm-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .btn-confirm-delete {
+    width: 100%;
+    padding: 0.85rem;
+    background: #c0392b;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-confirm-delete:hover { background: #922b21; }
+
+  .btn-cancel-link {
+    display: block;
+    font-size: 0.82rem;
+    color: var(--ink-muted);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    text-decoration-color: var(--border);
+    font-weight: 300;
+  }
+
+  .btn-cancel-link:hover { color: var(--ink); }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="page-wrapper">
+  <div class="confirm-card">
+    <span class="confirm-icon">⚠️</span>
+    <h1 class="confirm-title">Supprimer cette prestation ?</h1>
+    <p class="confirm-sub">
+      Vous êtes sur le point de supprimer définitivement<br>
+      <strong>« {{ offering.title }} »</strong>.<br>
+      Cette action est irréversible.
+    </p>
+    <div class="confirm-actions">
+      <form method="post">
+        {% csrf_token %}
+        <button class="btn-confirm-delete" type="submit">Oui, supprimer</button>
+      </form>
+      <a class="btn-cancel-link"
+         href="{% url 'offerings:edit' offering.pk %}">Non, annuler</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

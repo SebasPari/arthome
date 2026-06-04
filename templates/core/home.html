@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}ArtHome — L'art se déplace chez vous{% endblock %}
+
+{% block body %}
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <a href="{% url 'core:home' %}" class="nav-logo">Art<span style="opacity:0.5">/</span>Home</a>
+  <button class="nav-toggle" id="nav-toggle" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+  <ul class="nav-links" id="nav-menu">
+    <li><a href="{% url 'accounts:artist_list' %}">Trouver un artiste</a></li>
+    {% if user.is_authenticated %}
+      <li><a href="{% url 'core:dashboard' %}">Tableau de bord</a></li>
+      <li><a href="{% url 'accounts:logout' %}">Déconnexion</a></li>
+    {% else %}
+      <li><a href="{% url 'accounts:join' %}" class="nav-cta">Rejoindre</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-noise"></div>
+  <div class="hero-content">
+    <div class="deco-line"></div>
+    <h1 class="hero-headline">
+      L'art qui vient<br><em>chez vous.</em>
+    </h1>
+    <p class="hero-sub">
+      Des artistes qui se déplacent chez vous pour animer ateliers, spectacles et prestations — dans votre salon, votre jardin, votre espace.
+    </p>
+    <div class="hero-actions">
+      <a href="{% url 'accounts:artist_list' %}" class="btn-primary">Trouver un artiste</a>
+      <a href="#how-it-works" class="btn-ghost">Comment ça marche</a>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="section" id="how-it-works">
+  <div class="section-header">
+    <p class="section-tag">Comment ça marche</p>
+    <h2 class="section-title">Votre maison devient<br><em>une scène.</em></h2>
+  </div>
+  <div class="cards-grid">
+
+    <div class="feature-card">
+      <span class="feature-icon">🏠</span>
+      <h3 class="feature-title">Vous êtes l'hôte</h3>
+      <p class="feature-desc">Ouvrez votre espace — salon, jardin, loft, cour intérieure — et invitez un artiste à venir y animer une prestation pour vos proches ou vos invités.</p>
+    </div>
+
+    <div class="feature-card">
+      <span class="feature-icon">✦</span>
+      <h3 class="feature-title">L'artiste se déplace</h3>
+      <p class="feature-desc">Chaque artiste propose ses ateliers, concerts ou spectacles en déplacement. Il vient chez vous, avec son matériel, à l'heure convenue.</p>
+    </div>
+
+    <div class="feature-card">
+      <span class="feature-icon">◎</span>
+      <h3 class="feature-title">Une expérience unique</h3>
+      <p class="feature-desc">Cours de peinture en famille, concert privé, atelier de danse — des moments créatifs sur mesure, dans l'intimité de votre chez-vous.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- FOR ARTISTS SECTION -->
+<section class="section" style="background:var(--ink);padding:5rem 3rem;">
+  <div style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:4rem;align-items:center;">
+    <div>
+      <p class="section-tag">Pour les artistes</p>
+      <h2 style="font-family:'Cormorant Garamond',serif;font-size:clamp(1.8rem,4vw,2.8rem);font-weight:300;color:var(--cream);line-height:1.15;margin-bottom:1.25rem;">
+        Transformez votre talent<br>en <em style="font-style:italic;color:var(--accent)">revenus mobiles.</em>
+      </h2>
+      <p style="font-size:0.875rem;line-height:1.75;color:rgba(247,244,239,0.55);font-weight:300;margin-bottom:2rem;max-width:38ch;">
+        Proposez vos ateliers et prestations à domicile. Vous définissez vos tarifs, votre zone de déplacement et vos disponibilités. Les hôtes viennent à vous.
+      </p>
+      <a href="{% url 'accounts:join' %}" class="btn-primary">Créer mon profil artiste</a>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+      {% for item in "123" %}
+      <div style="display:flex;gap:1rem;align-items:flex-start;">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;color:var(--accent);opacity:0.6;flex-shrink:0;margin-top:0.1rem;">0{{ forloop.counter }}</span>
+        <div>
+          {% if forloop.counter == 1 %}
+          <p style="font-size:0.82rem;font-weight:500;color:var(--cream);margin-bottom:0.2rem;">Créez votre profil</p>
+          <p style="font-size:0.78rem;color:rgba(247,244,239,0.45);font-weight:300;line-height:1.5;">Décrivez votre discipline, vos ateliers disponibles et votre zone de déplacement.</p>
+          {% elif forloop.counter == 2 %}
+          <p style="font-size:0.82rem;font-weight:500;color:var(--cream);margin-bottom:0.2rem;">Recevez des demandes</p>
+          <p style="font-size:0.78rem;color:rgba(247,244,239,0.45);font-weight:300;line-height:1.5;">Les hôtes intéressés vous contactent directement via la plateforme.</p>
+          {% else %}
+          <p style="font-size:0.82rem;font-weight:500;color:var(--cream);margin-bottom:0.2rem;">Déplacez-vous et animez</p>
+          <p style="font-size:0.78rem;color:rgba(247,244,239,0.45);font-weight:300;line-height:1.5;">Rendez-vous chez l'hôte et offrez une expérience créative inoubliable.</p>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <span style="font-family:'Cormorant Garamond',serif;font-size:1rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);">Art/Home</span>
+  <span>© 2026 ArtHome. Tous droits réservés.</span>
+</footer>
+
+{% endblock %}
