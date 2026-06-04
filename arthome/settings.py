@@ -6,7 +6,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = config('SECRET_KEY', default='dev-secret-key-change-in-production')
 DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')
+ALLOWED_HOSTS = [h.strip() for h in config('ALLOWED_HOSTS', default='127.0.0.1,localhost').split(',')]
+
+# Ajoute automatiquement le domaine Railway si disponible
+import os
+_railway_host = os.environ.get('RAILWAY_PUBLIC_DOMAIN')
+if _railway_host and _railway_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_railway_host)
 
 INSTALLED_APPS = [
     'django.contrib.admin',
