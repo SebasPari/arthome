@@ -362,9 +362,9 @@
           <!-- Role selector -->
           <div class="role-select">
             <label class="role-card">
-              <input type="radio" name="role" value="client"
-                     {% if not register_form.role.value or register_form.role.value == 'client' %}checked{% endif %}
-                     onchange="updateRole('client')"/>
+              <input type="radio" name="role" value="host"
+                     {% if not register_form.role.value or register_form.role.value == 'host' %}checked{% endif %}
+                     onchange="updateRole('host')"/>
               <span class="role-icon">🏠</span>
               <div class="role-title">Hôte</div>
               <div class="role-desc">Invitez un artiste chez vous</div>
@@ -455,6 +455,8 @@
       notice.innerHTML = 'Inscription en tant qu\'<strong>Hôte</strong> — invitez des artistes à animer une prestation chez vous.';
       artistFields.classList.remove('visible');
     }
+  }
+
   }
 </script>
 {% endblock %}

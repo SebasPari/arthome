@@ -46,6 +46,25 @@ def logout_view(request):
     return redirect('core:home')
 
 
+def approve_user_view(request, user_id, token):
+    """Lien d'approbation envoyé par email à l'admin."""
+    from django.contrib.auth.tokens import default_token_generator
+    user = get_object_or_404(CustomUser, pk=user_id, is_active=False)
+
+    if not default_token_generator.check_token(user, token):
+        messages.error(request, 'Ce lien est invalide ou a expiré.')
+        return redirect('core:home')
+
+    user.is_active = True
+    user.save()
+
+    from core.emails import notify_user_approved
+    notify_user_approved(user)
+
+    messages.success(request, f'Le compte de {user.full_name} ({user.email}) a été approuvé. Un email de confirmation lui a été envoyé.')
+    return redirect('core:home')
+
+
 def artist_list_view(request):
     """Browse artists with advanced search and filters."""
     from offerings.models import Offering
